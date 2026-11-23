@@ -1,0 +1,151 @@
+{
+  "name": "Sales Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "06ff9078-ffe9-4fc2-aec1-38a735053067",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        -176
+      ],
+      "id": "bf5c6c5b-91dd-4b94-945d-d0fcce7f09ab",
+      "name": "Webhook",
+      "webhookId": "06ff9078-ffe9-4fc2-aec1-38a735053067"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "QrfjQ4R8MCt55YmI",
+          "mode": "list",
+          "cachedResultName": "sales_analysis1",
+          "cachedResultUrl": "/projects/DgAveLIxospkn2Ln/datatables/QrfjQ4R8MCt55YmI"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        -176
+      ],
+      "id": "bae73239-c537-4dd5-85cf-a1453af2a9f6",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst rows = $input.all().map(item => item.json);\n\nconst validRows = rows.filter(row =>\n  row.metric && row.category && row.value !== null\n);\n\n\nconst analysis = {};\n\nfor (const row of validRows) {\n  if (!analysis[row.metric]) {\n    analysis[row.metric] = [];\n  }\n\n  analysis[row.metric].push({\n    category: row.category,\n    value: Number(row.value),\n    period: row.period\n  });\n}\n\nreturn [\n  {\n    json: analysis\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        48
+      ],
+      "id": "5f69c598-7723-46cc-bf0e-19fa39d1b898",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst data = $input.first().json;\n\n\nconst totalSales = Math.max(\n  ...(data.total_sales || []).map(item => Number(item.value || 0))\n);\n\n\nfunction removeDuplicates(rows) {\n  const unique = new Map();\n\n  for (const row of rows) {\n    const key = `${row.category}-${row.period}`;\n    if (!unique.has(key)) {\n      unique.set(key, row);\n    }\n  }\n\n  return [...unique.values()];\n}\n\nconst productLine = removeDuplicates(data.product_line || []);\nconst countries = removeDuplicates(data.country || []);\nconst monthlySales = removeDuplicates(data.monthly_sales || []);\nconst customers = removeDuplicates(data.top_customer || []);\n\nconst topProduct = [...productLine].sort((a, b) => b.value - a.value)[0];\nconst topCountry = [...countries].sort((a, b) => b.value - a.value)[0];\n\nconst formatNumber = value =>\n  Number(value || 0).toLocaleString('en-US', {\n    maximumFractionDigits: 2\n  });\n\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>Sales Analytics Dashboard</title>\n<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>\n\n<style>\nbody {\n  font-family: Arial, sans-serif;\n  background: #f4f8fc;\n  margin: 0;\n  padding: 25px;\n  color: #1e293b;\n}\nh1 { color: #1d4ed8; }\n.cards {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 18px;\n  margin: 25px 0;\n}\n.card, .chart {\n  background: white;\n  padding: 22px;\n  border-radius: 12px;\n  box-shadow: 0 2px 10px #0000000d;\n}\n.card {\n  border-top: 4px solid #1d4ed8;\n  transition: transform 0.2s ease;\n}\n\n.card:hover {\n  transform: translateY(-4px);\n}\n.card h3 { color: #777; font-size: 14px; }\n.card p { font-size: 22px; font-weight: bold; }\n.charts {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));\n  gap: 20px;\n}\n.chart { min-height: 300px; }\n</style>\n</head>\n\n<body>\n<h1>Sales Analytics Dashboard</h1>\n<p>Overview of sales performance</p>\n<div style=\"margin: 20px 0;\">\n  <label for=\"monthFilter\">Select Month:</label>\n  <select id=\"monthFilter\">\n    <option value=\"all\">All Months</option>\n  </select>\n</div>\n\n<div class=\"cards\">\n  <div class=\"card\">\n    <h3>Total Sales</h3>\n    <p>${formatNumber(totalSales)}</p>\n  </div>\n  <div class=\"card\">\n    <h3>Top Product Line</h3>\n    <p>${topProduct?.category || 'N/A'}</p>\n  </div>\n  <div class=\"card\">\n    <h3>Top Country</h3>\n    <p>${topCountry?.category || 'N/A'}</p>\n  </div>\n  <div class=\"card\">\n    <h3>Top Customer</h3>\n    <p>${customers[0]?.category || 'N/A'}</p>\n  </div>\n</div>\n\n<div class=\"charts\">\n  <div class=\"chart\"><canvas id=\"products\"></canvas></div>\n  <div class=\"chart\"><canvas id=\"countries\"></canvas></div>\n  <div class=\"chart\"><canvas id=\"monthly\"></canvas></div>\n  <div class=\"chart\"><canvas id=\"customers\"></canvas></div>\n</div>\n\n<script>\nconst products = ${JSON.stringify(productLine)};\nconst countries = ${JSON.stringify(countries)};\nconst monthly = ${JSON.stringify(monthlySales)};\nconst customers = ${JSON.stringify(customers)};\n\nfunction createChart(id, type, rows, title) {\n  new Chart(document.getElementById(id), {\n    type,\n    data: {\n      labels: rows.map(r => \n  r.period && r.period !== 'All' ? r.period : r.category\n),\n      datasets: [{\n        label: 'Sales',\n        data: rows.map(r => r.value),\n        backgroundColor: '##60a5fa',\n        borderColor: '#1d4ed8',\n        borderWidth: 2,\n        tension: 0.3\n      }]\n    },\n    options: {\n      responsive: true,\n      maintainAspectRatio: false,\n      plugins: {\n        title: { display: true, text: title }\n      }\n    }\n  });\n}\n\ncreateChart('products', 'bar', products, 'Sales by Product Line');\ncreateChart('countries', 'bar', countries, 'Sales by Country');\ncreateChart('monthly', 'line', monthly, 'Monthly Sales');\ncreateChart('customers', 'bar', customers, 'Top 10 Customers');\n</script>\n</body>\n</html>\n`;\n\nreturn [{ json: { html } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        48
+      ],
+      "id": "c6f917a7-7413-4533-a635-a61189cd8e42",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        192
+      ],
+      "id": "e3fa3d02-4a11-4d27-8cd8-338ce2d01aa8",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f2b0be40-21e6-40ed-bbf2-a11417d4cbe0",
+  "meta": {
+    "instanceId": "ef6a50ad13a4caed2ef8f7ce103edd27c224827e95959b0ffe109e78f9037258"
+  },
+  "nodeGroups": [],
+  "id": "bMe1ksbffdPBRnYZ",
+  "tags": []
+}

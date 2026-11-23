@@ -1,0 +1,768 @@
+{
+  "name": "Sales Data Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c6f85b00-3651-44cb-afc9-edd74cfbff5e",
+      "name": "When chat message received",
+      "webhookId": "90e44418-8dca-433b-bac7-257fd16aec98"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an AI Data Analyst specialized in sales analysis.\n\nYour role is to analyze sales data and answer users' questions accurately.\n\nYou have access to a Data Table Tool containing precomputed sales analysis results.\n\nYou can answer questions about:\n- Total sales.\n- Sales by product line.\n- Sales by country.\n- Monthly sales trends.\n- Top 10 customers.\n\nInstructions:\n1. Always use the Data Table Tool to retrieve the relevant data before answering.\n2. Never invent numbers or information.\n3. Base your answers only on the retrieved data.\n4. Explain results clearly and simply.\n5. Highlight important findings when relevant.\n6. If the requested information is unavailable, explain that clearly.\n7. Respond in the same language as the user's question."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "6e8c35e8-20d9-44e6-8bcf-9521e55d061f",
+      "name": "data Analyst"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        160
+      ],
+      "id": "c0883a48-545f-4cd8-b0da-d79a0f9691b5",
+      "name": "OpenAI Chat Model/brain",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Sales Data Upload",
+        "formDescription": "Upload your sales dataset (CSV)",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "\tUpload Sales CSVc",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        304
+      ],
+      "id": "2c737549-f032-48c5-bf2a-4d5d48a1604b",
+      "name": "On form submission",
+      "webhookId": "77907070-13de-45ef-a9d1-7314db9cbfe5"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "_Upload_Sales_CSVc",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        320
+      ],
+      "id": "2a8356b6-1282-441d-8fe3-61659c0c442f",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "sales_analysis1",
+        "columns": {
+          "column": [
+            {
+              "name": "metric"
+            },
+            {
+              "name": "category"
+            },
+            {
+              "name": "value",
+              "type": "number"
+            },
+            {
+              "name": "period"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        320
+      ],
+      "id": "08ce0ebd-34e4-4cb2-a53d-35741d0de3a3",
+      "name": "Create a data table"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "QrfjQ4R8MCt55YmI",
+          "mode": "list",
+          "cachedResultName": "sales_analysis1",
+          "cachedResultUrl": "/projects/DgAveLIxospkn2Ln/datatables/QrfjQ4R8MCt55YmI"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "value": "={{ $json.total_sales }}",
+            "metric": "total_sales",
+            "category": "All",
+            "period": "All"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "metric",
+              "displayName": "metric",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "period",
+              "displayName": "period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        96
+      ],
+      "id": "2f9fb758-480f-4104-9498-58a7288ceff5",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "QrfjQ4R8MCt55YmI",
+          "mode": "list",
+          "cachedResultName": "sales_analysis1",
+          "cachedResultUrl": "/projects/DgAveLIxospkn2Ln/datatables/QrfjQ4R8MCt55YmI"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "metric": "product_line",
+            "category": "={{ $json.product_line }}",
+            "value": "={{ $json.total_sales }}",
+            "period": "All"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "metric",
+              "displayName": "metric",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "period",
+              "displayName": "period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        256
+      ],
+      "id": "51bf1032-2a52-454a-9ba5-3e0562294a31",
+      "name": "Insert row1"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "QrfjQ4R8MCt55YmI",
+          "mode": "list",
+          "cachedResultName": "sales_analysis1",
+          "cachedResultUrl": "/projects/DgAveLIxospkn2Ln/datatables/QrfjQ4R8MCt55YmI"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "metric": "country",
+            "category": "=\t{{ $json.country }}",
+            "value": "={{ $json.total_sales }}",
+            "period": "All"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "metric",
+              "displayName": "metric",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "period",
+              "displayName": "period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        432
+      ],
+      "id": "2bc488ce-b424-4e90-b8ba-f824350e9f69",
+      "name": "Insert row2"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "QrfjQ4R8MCt55YmI",
+          "mode": "list",
+          "cachedResultName": "sales_analysis1",
+          "cachedResultUrl": "/projects/DgAveLIxospkn2Ln/datatables/QrfjQ4R8MCt55YmI"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "metric": "monthly_sales",
+            "category": "All",
+            "value": "={{ $json.total_sales }}",
+            "period": "={{ $json.month }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "metric",
+              "displayName": "metric",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "period",
+              "displayName": "period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        592
+      ],
+      "id": "60873657-54d1-4866-84c9-8fbcf6cf42db",
+      "name": "Insert row3"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "QrfjQ4R8MCt55YmI",
+          "mode": "list",
+          "cachedResultName": "sales_analysis1",
+          "cachedResultUrl": "/projects/DgAveLIxospkn2Ln/datatables/QrfjQ4R8MCt55YmI"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "metric": "top_customer",
+            "category": "={{$json.customer}}",
+            "value": "={{$json.total_sales }}",
+            "period": "All"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "metric",
+              "displayName": "metric",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "period",
+              "displayName": "period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        800
+      ],
+      "id": "ecbab9f3-0495-4fe0-8b67-5725376cb208",
+      "name": "Insert row4"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "QrfjQ4R8MCt55YmI",
+          "mode": "list",
+          "cachedResultName": "sales_analysis1",
+          "cachedResultUrl": "/projects/DgAveLIxospkn2Ln/datatables/QrfjQ4R8MCt55YmI"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        -64
+      ],
+      "id": "008a3761-5329-4afa-acc6-d9cfd07e3219",
+      "name": "Get row(s) in Data table"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Calculer le total des ventes\ntotal_sales = 0\n\nfor item in _items:\n    total_sales += float(item[\"json\"][\"SALES\"])\n\n# Retourner le résultat\nreturn [{\n    \"json\": {\n        \"total_sales\": total_sales,\n        \"rows_analyzed\": len(_items)\n    }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        192
+      ],
+      "id": "66da3d96-f3c2-4362-8dbb-a4366df0d5e4",
+      "name": "Total sales"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Initialiser un dictionnaire pour stocker les ventes par produit\nsales_by_product = {}\n\n# Parcourir toutes les lignes du fichier\nfor item in _items:\n    product = item[\"json\"][\"PRODUCTLINE\"]\n    sales = float(item[\"json\"][\"SALES\"])\n\n    # Additionner les ventes de chaque catégorie\n    if product in sales_by_product:\n        sales_by_product[product] += sales\n    else:\n        sales_by_product[product] = sales\n\n# Trier les produits du plus vendu au moins vendu\nresults = sorted(\n    sales_by_product.items(),\n    key=lambda x: x[1],\n    reverse=True\n)\n\n# Retourner les résultats\nreturn [\n    {\n        \"json\": {\n            \"product_line\": product,\n            \"total_sales\": round(total, 2)\n        }\n    }\n    for product, total in results\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        336
+      ],
+      "id": "b73679e1-d906-4ce2-8997-9af2f311a109",
+      "name": "Sales by Product Line"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "\n# Initialiser un dictionnaire pour les ventes par pays\nsales_by_country = {}\n\n# Parcourir toutes les lignes\nfor item in _items:\n    country = item[\"json\"][\"COUNTRY\"]\n    sales = float(item[\"json\"][\"SALES\"])\n\n    # Calculer le total des ventes par pays\n    if country in sales_by_country:\n        sales_by_country[country] += sales\n    else:\n        sales_by_country[country] = sales\n\n# Trier les pays du plus vendu au moins vendu\nresults = sorted(\n    sales_by_country.items(),\n    key=lambda x: x[1],\n    reverse=True\n)\n\n# Retourner les résultats\nreturn [\n    {\n        \"json\": {\n            \"country\": country,\n            \"total_sales\": round(total, 2)\n        }\n    }\n    for country, total in results\n]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        480
+      ],
+      "id": "18c77be7-e30c-4926-bb71-5cd5d31c9457",
+      "name": "Sales by Country"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "\nmonthly_sales = {}\n\nfor item in _items:\n    year = int(item[\"json\"][\"YEAR_ID\"])\n    month = int(item[\"json\"][\"MONTH_ID\"])\n    sales = float(item[\"json\"][\"SALES\"])\n\n    period = f\"{year}-{month:02d}\"\n\n    if period in monthly_sales:\n        monthly_sales[period] += sales\n    else:\n        monthly_sales[period] = sales\n\nresults = sorted(monthly_sales.items())\n\nreturn [\n    {\n        \"json\": {\n            \"month\": period,\n            \"total_sales\": round(total, 2)\n        }\n    }\n    for period, total in results\n]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        656
+      ],
+      "id": "3e421ced-40e2-4b96-8fd8-ffcb451012e3",
+      "name": "Monthly Sales"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "\ncustomer_sales = {}\n\nfor item in _items:\n    customer = item[\"json\"][\"CUSTOMERNAME\"]\n    sales = float(item[\"json\"][\"SALES\"])\n\n    if customer in customer_sales:\n        customer_sales[customer] += sales\n    else:\n        customer_sales[customer] = sales\n\nresults = sorted(\n    customer_sales.items(),\n    key=lambda x: x[1],\n    reverse=True\n)\n\nreturn [\n    {\n        \"json\": {\n            \"customer\": customer,\n            \"total_sales\": round(total, 2)\n        }\n    }\n    for customer, total in results[:10]\n]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        832
+      ],
+      "id": "d04ad243-0dd5-48c9-a44a-8496cfff5d2b",
+      "name": "Top 10 Customers"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "data Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model/brain": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "data Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Total sales",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sales by Product Line",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sales by Country",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Monthly Sales",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Top 10 Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a data table": {
+      "main": [
+        []
+      ]
+    },
+    "Insert row": {
+      "main": [
+        []
+      ]
+    },
+    "Insert row1": {
+      "main": [
+        []
+      ]
+    },
+    "Insert row2": {
+      "main": [
+        []
+      ]
+    },
+    "Insert row3": {
+      "main": [
+        []
+      ]
+    },
+    "Insert row4": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in Data table": {
+      "ai_tool": [
+        [
+          {
+            "node": "data Analyst",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Total sales": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales by Product Line": {
+      "main": [
+        [
+          {
+            "node": "Insert row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales by Country": {
+      "main": [
+        [
+          {
+            "node": "Insert row2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monthly Sales": {
+      "main": [
+        [
+          {
+            "node": "Insert row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top 10 Customers": {
+      "main": [
+        [
+          {
+            "node": "Insert row4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "70e8de43-ee59-4a0c-9c6f-e2177dfea36e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ef6a50ad13a4caed2ef8f7ce103edd27c224827e95959b0ffe109e78f9037258"
+  },
+  "nodeGroups": [],
+  "id": "H0qS5sTq7fEv1c1C",
+  "tags": []
+}
